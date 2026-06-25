@@ -1,0 +1,35 @@
+services:
+
+  ssh-honeypot:
+    build: .
+    # To capture real SSH traffic on port 22, change "2222:2222" to "22:2222"
+    command: python3 honeypy.py -a 0.0.0.0 -p 2222 --ssh
+    ports:
+      - "2222:2222"
+    volumes:
+      - log_data:/app/log_files
+    restart: unless-stopped
+
+  http-honeypot:
+    build: .
+    command: python3 honeypy.py -a 0.0.0.0 -p 5000 --http
+    ports:
+      - "5000:5000"
+    volumes:
+      - log_data:/app/log_files
+    restart: unless-stopped
+
+  dashboard:
+    build: .
+    command: python3 web_app.py
+    ports:
+      - "8050:8050"
+    volumes:
+      - log_data:/app/log_files
+    depends_on:
+      - ssh-honeypot
+      - http-honeypot
+    restart: unless-stopped
+
+volumes:
+  log_data:
